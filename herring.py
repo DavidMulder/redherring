@@ -2,25 +2,32 @@
 
 import difflib, sys, os.path, argparse
 from dateutil.parser import parse as date_parse
+import re
 
 def similarity(a, b):
     return difflib.SequenceMatcher(None, a, b)
 
 def discover(filename):
     discoveries = {}
+    time_stamp_res = [re.compile('^\s*\[(\d+/\d+/\d+\s+\d+:\d+:[\d\.]+),\s+[^\]]+\]\s+(.*)$')]
 
     with open(sys.argv[1], 'r') as f:
+        buf_stamp = None
+        buf = '' # Buffer for multi-line messages
         ln = 1
         for line in f:
-            if not line.strip():
+            stamp = None
+            for mo in time_stamp_res:
+                m = mo.match(line)
+                if m: # start a new line
+                    stamp = buf_stamp
+                    buf_stamp = m.group(1)
+                    line = buf
+                    buf = m.group(2) + '\n'
+            if not stamp:
+                buf += line
                 continue
-            try:
-                stamp, line = line.strip().split(': ', 1) # The seperator between date stamp and the message
-            except:
-                continue # ignore lines that wont parse
-            data = stamp.split()
-            date = date_parse(' '.join(data[:3]))
-            module = data[-1].split('[')[0]
+            date = date_parse(stamp)
             line_found = False
             for other in discoveries.keys():
                 s = similarity(line, other)
@@ -39,7 +46,7 @@ def discover(filename):
                     line_found = True
                     break
             if not line_found:
-                discoveries[line] = [1.0, [(date, line)], module]
+                discoveries[line] = [1.0, [(date, line)]]
             ln += 1
 
     return discoveries
@@ -73,7 +80,6 @@ if __name__ == "__main__":
         data[1].sort(key=lambda things: things[0])
         if not args.one_liner:
             print '\n\nMessage: %s' % line
-            print 'Module: %s' % data[2]
             print 'Frequency: %d' % len(data[1])
             print 'Similarity: %d%%' % (100.0*data[0])
             print 'Range: %s through %s' % (data[1][0][0].strftime('%d %b %H:%M:%S'), data[1][-1][0].strftime('%d %b %H:%M:%S'))
