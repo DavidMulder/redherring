@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import difflib, sys, os.path, argparse
 from dateutil.parser import parse as date_parse
@@ -11,7 +11,7 @@ def discover(filename):
     discoveries = {}
     time_stamp_res = [re.compile('^\s*\[(\d+/\d+/\d+\s+\d+:\d+:[\d\.]+),\s+[^\]]+\]\s+(.*)$')]
 
-    with open(sys.argv[1], 'r') as f:
+    with open(filename, 'r') as f:
         buf_stamp = None
         buf = '' # Buffer for multi-line messages
         ln = 1
@@ -79,19 +79,19 @@ if __name__ == "__main__":
             continue
         data[1].sort(key=lambda things: things[0])
         if not args.one_liner:
-            print '\n\nMessage: %s' % line
-            print 'Frequency: %d' % len(data[1])
-            print 'Similarity: %d%%' % (100.0*data[0])
-            print 'Range: %s through %s' % (data[1][0][0].strftime('%d %b %H:%M:%S'), data[1][-1][0].strftime('%d %b %H:%M:%S'))
+            print('\n\nMessage: %s' % line)
+            print('Frequency: %d' % len(data[1]))
+            print('Similarity: %d%%' % (100.0*data[0]))
+            print('Range: %s through %s' % (data[1][0][0].strftime('%d %b %H:%M:%S'), data[1][-1][0].strftime('%d %b %H:%M:%S')))
             if args.print_messages:
                 for i in data[1]:
-                    print '%s: %s' % (i[0].strftime('%d %b %H:%M:%S'), i[1])
+                    print('%s: %s' % (i[0].strftime('%d %b %H:%M:%S'), i[1]))
         else:
             if args.only_uncommon and args.uncommon_frequency == 1:
-                print '%s: %s' % (data[1][0][0].strftime('%d %b %H:%M:%S'), line)
+                print('%s: %s' % (data[1][0][0].strftime('%d %b %H:%M:%S'), line))
             else:
-                print 'freq %.2d sim %.3d%% range %s - %s msg: %s' % (len(data[1]), (100.0*data[0]), data[1][0][0].strftime('%m/%d %H:%M:%S'), data[1][-1][0].strftime('%m/%d %H:%M:%S'), line)
+                print('freq %.2d sim %.3d%% range %s - %s msg: %s' % (len(data[1]), (100.0*data[0]), data[1][0][0].strftime('%m/%d %H:%M:%S'), data[1][-1][0].strftime('%m/%d %H:%M:%S'), line))
 
     if args.unique_messages:
-        print '\n\nUnique Messages: %d\n' % len(discoveries.keys())
+        print('\n\nUnique Messages: %d\n' % len(discoveries.keys()))
 
